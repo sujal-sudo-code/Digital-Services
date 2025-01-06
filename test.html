@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Background Color on Scroll</title>
+    <style>
+        body {
+            height: 2000px; /* Just to make sure the page is scrollable */
+            margin: 0;
+        }
+
+        .content {
+            height: 1000px;
+            background-color: lightblue;
+            transition: background-color 0.3s ease;
+        }
+
+        .content.scrolled {
+            background-color: lightcoral; /* Background color when scrolled */
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        Scroll down to change background color
+    </div>
+
+    <script>
+        // Get the element to apply the background change
+        const content = document.querySelector('.content');
+
+        // Set the height at which the background color will change
+        const targetHeight = 300; // Change the background color after 300px scroll
+
+        // Listen for the scroll event
+        window.addEventListener('scroll', () => {
+            if (window.scrollY >= targetHeight) {
+                content.classList.add('scrolled'); // Add 'scrolled' class when target height is reached
+            } else {
+                content.classList.remove('scrolled'); // Remove 'scrolled' class when scroll position is less
+            }
+        });
+    </script>
+</body>
+</html>
