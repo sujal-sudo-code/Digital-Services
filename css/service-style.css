@@ -1,0 +1,267 @@
+body {
+    margin: 0;
+    background-color: rgba(22, 19, 19, 0.918);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    height: 200px;
+}
+
+.list-container {
+    display: flex;
+    gap: 1.35%;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: inline-block;
+}
+
+li {
+    display: inline;
+    margin-right: 10px;
+}
+
+.logo {
+    padding-left: 14%;
+    padding-top: 3%;
+    padding-right: 16%;
+}
+
+.logo a {
+    text-decoration: none;
+    color: white;
+}
+
+.link {
+    display: flex;
+    padding-top: 3%;
+    gap: 18%;
+}
+
+.link a {
+    text-decoration: none;
+    color: grey;
+    text-transform: uppercase;
+    font-size: 16px;
+    font-family: sans-serif;
+    transition: color 0.5s ease;
+}
+
+.link a:hover {
+    color: white;
+}
+
+.link a.active {
+    color: white;
+}
+
+.query {
+    color: white;
+    margin-top: 2.5%;
+    margin-left: 17%;
+}
+
+.service{
+    color: white;
+    font-size: 75px;
+    font-family: 'Heebo', sans-serif;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 100px;
+}
+
+.custom-line {
+    height: 2px;
+    background-color: lightblue;
+    margin: 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    margin-bottom: 60px;
+}
+
+.service {
+    padding-top: 60px;
+    font-size: 80px;
+    text-align: center;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+
+#fiber-laying-para {
+    scroll-margin-top: 425px;
+}
+
+#router-install {
+    scroll-margin-top: 350px;
+}
+
+#camera-service {
+    scroll-margin-top: 350px;
+}
+
+#bank-renovation{
+    scroll-margin-top: 350px;
+}
+
+#atm-install{
+    scroll-margin-top: 350px;
+}
+
+#solar-install{
+    scroll-margin-top: 350px;
+}
+
+.container {
+    background-color: #f4f4f4;
+    padding: 30px;
+    width: auto;
+    margin: 0;
+    text-align: left;
+}
+
+.content {
+    display: flex;
+    align-items: center; 
+    justify-content: space-between; 
+    gap: 20px;
+}
+
+.left {
+    margin-top: 50px;
+    margin-left: 80px;
+    width: 40%;
+    height: auto; 
+    margin-right: 50px;
+}
+
+.text {
+    flex: 1;
+    margin-left: 50px;
+}
+
+.text h2 {
+    margin-top: 100px;
+    font-size: 24px;
+    color: black;
+    font-family: 'Heebo', sans-serif;
+}
+
+.text p {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #555;
+    font-family: 'Heebo', sans-serif;
+}
+.text-2 {
+    margin-top: 50px;
+    flex: 1;
+}
+
+.text-2 h2 {
+    margin-left: 80px;
+    margin-top: 50px;
+    font-size: 24px;
+    color: black;
+    font-family: 'Heebo', sans-serif;
+}
+
+.text-2 p {
+    margin-left: 80px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #555;
+    font-family: 'Heebo', sans-serif;
+}
+
+.right {
+    margin-top: 50px;
+    width: 40%;
+    height: auto; 
+    margin-right: 90px;
+    display: block;
+}
+
+.footer{
+    padding: 20px 0px;
+    display: flex;
+    position: relative;
+    background-color: rgba(22, 19, 19, 0.918);
+}
+
+.logo-2{
+    padding-top: 70px;
+    color: white;
+    font-size: 25px;
+    font-weight: 600;
+    margin-left: 200px;
+}
+
+.logo-2 p{
+    margin-top: 33px;
+    line-height: 1.4;
+    font-size: 15px;
+    font-weight: normal;
+    font-family: 'Heebo', sans-serif;
+}
+
+.footer-service{
+    margin-left: 180px;
+    margin-top: 67px;
+    font-size: 25px;
+    color: white;
+    font-family: 'Heebo', sans-serif;
+}
+
+.service-footer p{
+    margin-top: 33px;
+    line-height: 1.4;
+    font-size: 15px;
+    font-weight: normal;
+    font-family: 'Heebo', sans-serif;
+}
+
+.company{
+    margin-left: 180px;
+    margin-top: 70px;
+    font-size: 25px;
+    color: white;
+    font-family: 'Heebo', sans-serif;
+}
+
+.footer-company a{
+    color: inherit;
+    text-decoration: none;
+    line-height: 1.4;
+    font-size: 15px;
+    font-weight: normal;
+    font-family: 'Heebo', sans-serif;
+    transition: color 0.5s ease;
+}
+
+.footer-company a:hover{
+    color: #00c2fd;
+}
+
+.address{
+    margin-left: 180px;
+    margin-top: 70px;
+    font-size: 25px;
+    color: white;
+    font-family: 'Heebo', sans-serif;
+    margin-right: 200px;
+}
+
+.address-footer{
+    margin-top: 33px;
+    color: inherit;
+    text-decoration: none;
+    line-height: 1.4;
+    font-size: 15px;
+    font-weight: normal;
+    font-family: 'Heebo', sans-serif;
+}
