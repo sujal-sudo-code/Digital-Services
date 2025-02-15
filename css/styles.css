@@ -1,3 +1,6 @@
+*{
+    font-family: "Urbanist";
+}
 body {
     margin: 0;
     background-image: url(/Image/Background/background1.jpg);
@@ -37,7 +40,7 @@ li {
     color: white;
     font-weight: 600;
     font-size: 30px;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Urbanist', sans-serif;
 }
 
 .link {
@@ -51,7 +54,8 @@ li {
     color: grey;
     text-transform: uppercase;
     font-size: 16px;
-    font-family: sans-serif;
+
+    font-family: "Urbanist";
     transition: color 0.5s ease;
 }
 
@@ -74,7 +78,7 @@ li {
     padding-top: 6%;
     font-size: 25px;
     color: white;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: "Urbanist";
     text-transform: uppercase;
 }
 
@@ -138,7 +142,7 @@ li {
 .call-text {
     font-size: 16px;
     color: white;
-    font-family: 'Heebo', sans-serif;
+    font-family: "Urbanist";
 }
 
 .container {
@@ -167,7 +171,7 @@ li {
 
 .p1 {
     font-size: 40px;
-    font-family: 'Heebo', sans-serif;
+    font-family: "Urbanist";
     line-height: 55px;
     font-weight: 400;
     margin-bottom: 20px;
@@ -176,7 +180,7 @@ li {
 
 .p2 {
     margin-top: 30px;
-    font-family: 'Heebo', sans-serif;
+    font-family: "Urbanist";
     margin-left: 110px;
     color: gray;
     line-height: 1.6;
@@ -215,6 +219,9 @@ li {
       inset -4px -4px 8px rgba(19, 95, 216, 0.35);
     margin-top: 30px;
 }
+.btn-donate a{
+    color: azure;
+}
 
 .btn-donate:hover {
     background-position: right top;
@@ -240,7 +247,7 @@ li {
 .p3{
     margin-top: 75px;
     margin-left: 50px;
-    font-family: 'Heebo', sans-serif;
+    font-family: "Urbanist";
     letter-spacing: 3px;
     font-size: 13px;
     font-weight: 700;
@@ -256,7 +263,7 @@ li {
 .counter-container h2{
     margin-top: 100px;
     margin-left: 75px;
-    font-family: 'Heebo', sans-serif;
+    font-family: "Urbanist";
 }
 
 .counter-container span{
@@ -269,14 +276,14 @@ li {
     margin-top: 75px;
     align-items: center;
     justify-content: center;
-    font-family: 'Heebo', sans-serif;
+    font-family: "Urbanist";
 }
 
 .service-para{
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Heebo', sans-serif;
+    font-family: "Urbanist";
     text-align: center;
     line-height: 1.5;
     margin-bottom: 65px;
@@ -298,6 +305,7 @@ li {
 }
 
 .image-box img {
+    border-radius: 10px;
     width: 100%;
     height: auto; 
 }
@@ -305,7 +313,7 @@ li {
 .image-box p {
     margin-top: 10px; 
     font-size: 16px; 
-    font-family: 'Heebo', sans-serif;
+    font-family: "Urbanist";
     color: gray;
 }
 
@@ -654,7 +662,7 @@ tr:last-child td:last-child {
 }
 
 .logo-2 p{
-    margin-top: 33px;
+    margin-top: 30px;
     line-height: 1.4;
     font-size: 15px;
     font-weight: normal;
