@@ -1,0 +1,42 @@
+[
+  {
+    "id": "mlt8sg7e5fpukl",
+    "name": "Test User",
+    "email": "test@example.com",
+    "phone": "+91 99999-99999",
+    "problem": "Testing the form",
+    "message": "This is a test submission to verify the backend works.",
+    "timestamp": "2026-02-19T09:12:02.570Z",
+    "emailSent": false
+  },
+  {
+    "id": "mlt9074znt78uu",
+    "name": "Sujal Test",
+    "email": "test.sujalrathore@gmail.com",
+    "phone": "+91 9876543210",
+    "problem": "Testing Email Integration",
+    "message": "This is a test message to verify that the Digital Services backend is delivering emails correctly.",
+    "timestamp": "2026-02-19T09:18:04.067Z",
+    "emailSent": true
+  },
+  {
+    "id": "mlt98segxyw9v5",
+    "name": "Sujal AutoReply Test",
+    "email": "test.sujalrathore@gmail.com",
+    "phone": "+91 9876543210",
+    "problem": "Testing Auto-Reply Feature",
+    "message": "I should receive a thank you email immediately after sending this.",
+    "timestamp": "2026-02-19T09:24:44.872Z",
+    "emailSent": false
+  },
+  {
+    "id": "mlt9eu6cm578hw",
+    "name": "Sujal",
+    "email": "iamsujalrathore@gmail.com",
+    "phone": "+91 82104 15539",
+    "problem": "Regarding bank maintainence in Katihar",
+    "message": "I want to renovate the bank in Katihar can you share the pricing for that.",
+    "timestamp": "2026-02-19T09:29:27.108Z",
+    "emailSent": false
+  }
+]
