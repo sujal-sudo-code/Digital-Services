@@ -4,7 +4,7 @@ import Title from './Title';
 import { PrimaryButton } from './Buttons';
 import { motion } from 'framer-motion';
 import emailjs from '@emailjs/browser';
-import { supabase } from '../lib/supabaseClient';
+import { createSubmission } from '../lib/api';
 
 const contactInfo = [
     {
@@ -28,36 +28,58 @@ const contactInfo = [
 
 // EmailJS config
 const EMAILJS_SERVICE = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-const EMAILJS_TEMPLATE = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_TEMPLATE_ADMIN = import.meta.env.VITE_EMAILJS_TEMPLATE_ADMIN;
+const EMAILJS_TEMPLATE_USER = import.meta.env.VITE_EMAILJS_TEMPLATE_USER;
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'test.sujalrathore@gmail.com';
 const emailjsConfigured = EMAILJS_SERVICE && EMAILJS_SERVICE !== 'your_service_id';
 
-async function saveToSupabase(data) {
-    const { error } = await supabase
-        .from('submissions')
-        .insert([{
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            problem: data.problem,
-            message: data.message,
-            status: 'pending'
-        }]);
-    
-    if (error) throw new Error(error.message);
-    return { success: true };
+// Initialize EmailJS
+if (emailjsConfigured) {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
 }
 
-async function sendViaEmailJS(data) {
-    if (!emailjsConfigured) return null;
+async function saveSubmission(data) {
+    return createSubmission({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        problem: data.problem,
+        message: data.message,
+    });
+}
+
+// Email 1: Notify admin about the new inquiry
+async function sendAdminNotification(data) {
+    if (!emailjsConfigured || !EMAILJS_TEMPLATE_ADMIN || EMAILJS_TEMPLATE_ADMIN === 'your_admin_template_id') {
+        console.warn('⚠️ Admin email template not configured');
+        return null;
+    }
     const templateParams = {
-        from_name: data.name,
-        from_email: data.email,
-        phone: data.phone || 'Not provided',
-        subject: data.problem || 'General Inquiry',
+        to_email: ADMIN_EMAIL,
+        user_name: data.name,
+        user_email: data.email,
+        user_phone: data.phone || 'Not provided',
+        user_subject: data.problem || 'General Inquiry',
         message: data.message,
     };
-    return emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams, EMAILJS_PUBLIC_KEY);
+    return emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE_ADMIN, templateParams);
+}
+
+// Email 2: Send confirmation auto-reply to the user
+async function sendUserConfirmation(data) {
+    if (!emailjsConfigured || !EMAILJS_TEMPLATE_USER || EMAILJS_TEMPLATE_USER === 'your_auto_reply_template_id') {
+        console.warn('⚠️ User confirmation template not configured');
+        return null;
+    }
+    const templateParams = {
+        to_email: data.email,
+        user_name: data.name,
+        user_email: data.email,
+        user_subject: data.problem || 'General Inquiry',
+        message: data.message,
+    };
+    return emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE_USER, templateParams);
 }
 
 export default function Contact() {
@@ -77,43 +99,64 @@ export default function Contact() {
         setStatusMessage('');
 
         try {
-            // Send to both in parallel — Supabase saves data, EmailJS sends email
+            // Send all three in parallel — DB saves, admin gets notified, user gets confirmation
             const results = await Promise.allSettled([
-                saveToSupabase(formData),
-                sendViaEmailJS(formData),
+                saveSubmission(formData),
+                sendAdminNotification(formData),
+                sendUserConfirmation(formData),
             ]);
 
             const dbResult = results[0];
-            const emailjsResult = results[1];
-
-            // Check if at least one succeeded
-            if (dbResult.status === 'fulfilled') {
-                setStatus('success');
-                setStatusMessage('Your message has been received! We\'ll get back to you soon.');
-            } else if (emailjsResult.status === 'fulfilled' && emailjsResult.value !== null) {
-                setStatus('success');
-                setStatusMessage('Message sent via email! We\'ll get back to you soon.');
-            } else {
-                // Both failed
-                throw new Error(dbResult.reason?.message || 'Failed to send message');
-            }
+            const adminEmailResult = results[1];
+            const userEmailResult = results[2];
 
             // Log results for debugging
             if (dbResult.status === 'rejected') {
-                console.warn('Database submission failed:', dbResult.reason?.message);
+                console.error('❌ Database submission failed:', dbResult.reason?.message);
+            } else {
+                console.log('✅ Database: saved successfully');
             }
-            if (emailjsResult.status === 'rejected') {
-                console.warn('EmailJS failed:', emailjsResult.reason?.message);
+            if (adminEmailResult.status === 'rejected') {
+                console.error('❌ Admin email failed:', adminEmailResult.reason?.text || adminEmailResult.reason?.message || adminEmailResult.reason);
+            } else if (adminEmailResult.value === null) {
+                console.warn('⚠️ Admin email skipped: template not configured');
+            } else {
+                console.log('✅ Admin email: sent to', ADMIN_EMAIL);
+            }
+            if (userEmailResult.status === 'rejected') {
+                console.error('❌ User confirmation failed:', userEmailResult.reason?.text || userEmailResult.reason?.message || userEmailResult.reason);
+            } else if (userEmailResult.value === null) {
+                console.warn('⚠️ User confirmation skipped: template not configured');
+            } else {
+                console.log('✅ User confirmation: sent to', formData.email);
+            }
+
+            // Check if at least DB save succeeded
+            if (dbResult.status === 'fulfilled') {
+                const adminFailed = adminEmailResult.status === 'rejected';
+
+                setStatus('success');
+                if (adminFailed) {
+                    setStatusMessage('Message saved! (Note: Email notification failed — check EmailJS config)');
+                } else {
+                    setStatusMessage('Your message has been received! We\'ll get back to you soon.');
+                }
+            } else if (adminEmailResult.status === 'fulfilled' && adminEmailResult.value !== null) {
+                setStatus('success');
+                setStatusMessage('Message sent! We\'ll get back to you soon.');
+            } else {
+                // Everything failed
+                throw new Error(dbResult.reason?.message || 'Failed to send message');
             }
 
             // Reset form
             setFormData({ name: '', email: '', phone: '', problem: '', message: '' });
 
-            // Reset status after 5 seconds
+            // Reset status after 8 seconds
             setTimeout(() => {
                 setStatus('idle');
                 setStatusMessage('');
-            }, 5000);
+            }, 8000);
 
         } catch (err) {
             setStatus('error');

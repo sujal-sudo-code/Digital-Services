@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getSession, logout as apiLogout, getSubmissions, updateSubmission as apiUpdateSubmission, deleteSubmission as apiDeleteSubmission } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import Title from '../components/Title';
-import { LoaderIcon, CheckCircleIcon, XCircleIcon, AlertCircleIcon, CalendarIcon, LogOutIcon, SearchIcon, FilterIcon, MailIcon } from 'lucide-react';
+import { LoaderIcon, CheckCircleIcon, XCircleIcon, AlertCircleIcon, CalendarIcon, LogOutIcon, SearchIcon, FilterIcon, MailIcon, Trash2Icon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Admin() {
@@ -15,27 +15,22 @@ export default function Admin() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const getUser = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
+        const checkAuth = async () => {
+            const sessionUser = await getSession();
+            if (!sessionUser) {
                 navigate('/login');
             } else {
-                setUser(session.user);
+                setUser(sessionUser);
                 fetchSubmissions();
             }
         };
-        getUser();
+        checkAuth();
     }, [navigate]);
 
     const fetchSubmissions = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('submissions')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
+            const data = await getSubmissions();
             setSubmissions(data || []);
         } catch (err) {
             setError(err.message);
@@ -44,25 +39,20 @@ export default function Admin() {
         }
     };
 
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
+    const handleLogout = () => {
+        apiLogout();
         navigate('/login');
     };
 
     const updateStatus = async (id, newStatus) => {
         const originalSubmissions = [...submissions];
         // Optimistic update
-        setSubmissions(prev => prev.map(sub => 
-            sub.id === id ? { ...sub, status: newStatus } : sub
+        setSubmissions(prev => prev.map(sub =>
+            sub._id === id ? { ...sub, status: newStatus } : sub
         ));
 
         try {
-            const { error } = await supabase
-                .from('submissions')
-                .update({ status: newStatus })
-                .eq('id', id);
-
-            if (error) throw error;
+            await apiUpdateSubmission(id, { status: newStatus });
         } catch (err) {
             console.error('Error updating status:', err);
             setError('Failed to update status');
@@ -71,10 +61,28 @@ export default function Admin() {
         }
     };
 
+    const handleDelete = async (id, name) => {
+        const confirmed = window.confirm(`Are you sure you want to delete the submission from "${name}"? This action cannot be undone.`);
+        if (!confirmed) return;
+
+        const originalSubmissions = [...submissions];
+        // Optimistic removal
+        setSubmissions(prev => prev.filter(sub => sub._id !== id));
+
+        try {
+            await apiDeleteSubmission(id);
+        } catch (err) {
+            console.error('Error deleting submission:', err);
+            setError('Failed to delete submission. Please try again.');
+            // Revert
+            setSubmissions(originalSubmissions);
+        }
+    };
+
     const filteredSubmissions = submissions.filter(sub => {
         const matchesFilter = filter === 'all' || sub.status === filter;
-        const matchesSearch = 
-            sub.name.toLowerCase().includes(search.toLowerCase()) || 
+        const matchesSearch =
+            sub.name.toLowerCase().includes(search.toLowerCase()) ||
             sub.email.toLowerCase().includes(search.toLowerCase()) ||
             (sub.problem && sub.problem.toLowerCase().includes(search.toLowerCase()));
         return matchesFilter && matchesSearch;
@@ -98,13 +106,13 @@ export default function Admin() {
                     </h1>
                     <p className="text-gray-400 text-sm mt-1">Manage inquiries and support tickets</p>
                 </div>
-                
+
                 <div className="flex items-center gap-4 w-full md:w-auto">
                     <div className="hidden md:flex flex-col items-end mr-4">
                         <span className="text-xs text-gray-500">Logged in as</span>
                         <span className="text-sm font-medium text-gray-300">{user.email}</span>
                     </div>
-                    <button 
+                    <button
                         onClick={handleLogout}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition text-sm font-medium border border-red-500/20 ml-auto md:ml-0"
                     >
@@ -160,11 +168,10 @@ export default function Admin() {
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition capitalize ${
-                                filter === f 
-                                    ? 'bg-blue-600 text-white shadow-lg' 
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition capitalize ${filter === f
+                                    ? 'bg-blue-600 text-white shadow-lg'
                                     : 'text-gray-400 hover:text-white hover:bg-white/5'
-                            }`}
+                                }`}
                         >
                             {f}
                         </button>
@@ -173,9 +180,9 @@ export default function Admin() {
 
                 <div className="relative">
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 size-4" />
-                    <input 
-                        type="text" 
-                        placeholder="Search name, email..." 
+                    <input
+                        type="text"
+                        placeholder="Search name, email..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full md:w-64 pl-10 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500/50 transition placeholder-gray-600"
@@ -196,14 +203,14 @@ export default function Admin() {
                     </div>
                     <h3 className="text-lg font-medium text-white">No submissions found</h3>
                     <p className="text-gray-500 mt-1 max-w-sm">
-                        {search 
-                            ? `No results matching "${search}"` 
-                            : filter !== 'all' 
-                                ? `No ${filter} tickets at the moment.` 
+                        {search
+                            ? `No results matching "${search}"`
+                            : filter !== 'all'
+                                ? `No ${filter} tickets at the moment.`
                                 : "Your inbox is empty. Good job!"}
                     </p>
                     {search && (
-                        <button 
+                        <button
                             onClick={() => setSearch('')}
                             className="mt-4 text-blue-400 text-sm hover:underline"
                         >
@@ -215,16 +222,16 @@ export default function Admin() {
                 <div className="grid gap-4">
                     <AnimatePresence>
                         {filteredSubmissions.map((sub) => (
-                            <motion.div 
-                                key={sub.id}
+                            <motion.div
+                                key={sub._id}
                                 layout
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 className={`
                                     relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 group
-                                    ${sub.status === 'resolved' 
-                                        ? 'bg-white/2 border-white/5 opacity-75 hover:opacity-100' 
+                                    ${sub.status === 'resolved'
+                                        ? 'bg-white/2 border-white/5 opacity-75 hover:opacity-100'
                                         : 'bg-white/5 border-white/10 hover:bg-white/8 hover:border-blue-500/20 hover:shadow-lg hover:shadow-blue-900/10'
                                     }
                                 `}
@@ -236,15 +243,14 @@ export default function Admin() {
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
                                             <h3 className="text-lg font-semibold text-white">{sub.name}</h3>
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
-                                                sub.status === 'resolved' 
-                                                    ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${sub.status === 'resolved'
+                                                    ? 'bg-green-500/10 text-green-400 border-green-500/20'
                                                     : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                                            }`}>
+                                                }`}>
                                                 {sub.status || 'New'}
                                             </span>
                                         </div>
-                                        
+
                                         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-400 mb-4">
                                             <div className="flex items-center gap-2">
                                                 <MailIcon className="size-3.5" />
@@ -271,21 +277,30 @@ export default function Admin() {
 
                                     <div className="flex md:flex-col justify-end gap-3 shrink-0 border-t md:border-t-0 md:border-l border-white/5 pt-4 md:pt-0 md:pl-6">
                                         {sub.status !== 'resolved' ? (
-                                            <button 
-                                                onClick={() => updateStatus(sub.id, 'resolved')}
+                                            <button
+                                                onClick={() => updateStatus(sub._id, 'resolved')}
                                                 className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition text-sm font-medium shadow-lg shadow-green-900/20 w-full md:w-32"
                                             >
                                                 <CheckCircleIcon className="size-4" />
                                                 Resolve
                                             </button>
                                         ) : (
-                                            <button 
-                                                onClick={() => updateStatus(sub.id, 'pending')}
-                                                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition text-sm font-medium border border-white/10 w-full md:w-32"
-                                            >
-                                                <XCircleIcon className="size-4" />
-                                                Reopen
-                                            </button>
+                                            <>
+                                                <button
+                                                    onClick={() => updateStatus(sub._id, 'pending')}
+                                                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition text-sm font-medium border border-white/10 w-full md:w-32"
+                                                >
+                                                    <XCircleIcon className="size-4" />
+                                                    Reopen
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(sub._id, sub.name)}
+                                                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition text-sm font-medium border border-red-500/20 w-full md:w-32"
+                                                >
+                                                    <Trash2Icon className="size-4" />
+                                                    Delete
+                                                </button>
+                                            </>
                                         )}
                                     </div>
                                 </div>

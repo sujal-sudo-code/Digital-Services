@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { login } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import Title from '../components/Title';
 import { PrimaryButton } from '../components/Buttons';
@@ -17,18 +17,14 @@ export default function Login() {
         setLoading(true);
         setError(null);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-
-        if (error) {
-            setError(error.message);
-            setLoading(false);
-        } else {
+        try {
+            await login(email, password);
             console.log('Logged in!');
-            // After successful login, redirect to admin dashboard
             navigate('/admin');
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -36,7 +32,7 @@ export default function Login() {
         <div className="flex flex-col items-center justify-center min-h-screen pt-20 px-4">
             <div className="w-full max-w-md bg-white/5 border border-white/10 p-8 rounded-2xl shadow-xl backdrop-blur-md">
                 <Title title="Admin Access" heading="Login" description="Enter your credentials to access the admin panel." />
-                
+
                 {error && (
                     <div className="bg-red-500/10 border border-red-500/20 text-red-200 p-3 rounded-lg flex items-center gap-2 text-sm mb-4">
                         <AlertCircleIcon className="size-4 shrink-0" />

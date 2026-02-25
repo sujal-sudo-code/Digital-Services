@@ -40,5 +40,12 @@ on public.submissions for update
 to authenticated 
 using (true);
 
+-- 6. Policy: Admin Delete Access
+-- Allow authenticated users (Admins) to DELETE resolved submissions.
+create policy "Allow admins to delete submissions" 
+on public.submissions for delete 
+to authenticated 
+using (true);
+
 -- OPTIONAL: Create a 'profiles' table if you want to store admin details beyond auth.users
 -- But for now, we'll just rely on creating a user in the Auth tab.
