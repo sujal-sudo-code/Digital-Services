@@ -3,7 +3,6 @@ import { SendIcon, PhoneIcon, MapPinIcon, MailIcon, LoaderIcon, CheckCircleIcon,
 import Title from './Title';
 import { PrimaryButton } from './Buttons';
 import { motion } from 'framer-motion';
-import emailjs from '@emailjs/browser';
 import { createSubmission } from '../lib/api';
 
 const contactInfo = [
@@ -26,62 +25,6 @@ const contactInfo = [
     },
 ];
 
-// EmailJS config
-const EMAILJS_SERVICE = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-const EMAILJS_TEMPLATE_ADMIN = import.meta.env.VITE_EMAILJS_TEMPLATE_ADMIN;
-const EMAILJS_TEMPLATE_USER = import.meta.env.VITE_EMAILJS_TEMPLATE_USER;
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'test.sujalrathore@gmail.com';
-const emailjsConfigured = EMAILJS_SERVICE && EMAILJS_SERVICE !== 'your_service_id';
-
-// Initialize EmailJS
-if (emailjsConfigured) {
-    emailjs.init(EMAILJS_PUBLIC_KEY);
-}
-
-async function saveSubmission(data) {
-    return createSubmission({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        problem: data.problem,
-        message: data.message,
-    });
-}
-
-// Email 1: Notify admin about the new inquiry
-async function sendAdminNotification(data) {
-    if (!emailjsConfigured || !EMAILJS_TEMPLATE_ADMIN || EMAILJS_TEMPLATE_ADMIN === 'your_admin_template_id') {
-        console.warn('⚠️ Admin email template not configured');
-        return null;
-    }
-    const templateParams = {
-        to_email: ADMIN_EMAIL,
-        user_name: data.name,
-        user_email: data.email,
-        user_phone: data.phone || 'Not provided',
-        user_subject: data.problem || 'General Inquiry',
-        message: data.message,
-    };
-    return emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE_ADMIN, templateParams);
-}
-
-// Email 2: Send confirmation auto-reply to the user
-async function sendUserConfirmation(data) {
-    if (!emailjsConfigured || !EMAILJS_TEMPLATE_USER || EMAILJS_TEMPLATE_USER === 'your_auto_reply_template_id') {
-        console.warn('⚠️ User confirmation template not configured');
-        return null;
-    }
-    const templateParams = {
-        to_email: data.email,
-        user_name: data.name,
-        user_email: data.email,
-        user_subject: data.problem || 'General Inquiry',
-        message: data.message,
-    };
-    return emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE_USER, templateParams);
-}
-
 export default function Contact() {
     const [formData, setFormData] = useState({
         name: '', email: '', phone: '', problem: '', message: ''
@@ -99,55 +42,19 @@ export default function Contact() {
         setStatusMessage('');
 
         try {
-            // Send all three in parallel — DB saves, admin gets notified, user gets confirmation
-            const results = await Promise.allSettled([
-                saveSubmission(formData),
-                sendAdminNotification(formData),
-                sendUserConfirmation(formData),
-            ]);
+            // Submit to backend — server handles DB save + email notifications via Nodemailer
+            await createSubmission({
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                problem: formData.problem,
+                message: formData.message,
+            });
 
-            const dbResult = results[0];
-            const adminEmailResult = results[1];
-            const userEmailResult = results[2];
+            console.log('✅ Submission saved successfully');
 
-            // Log results for debugging
-            if (dbResult.status === 'rejected') {
-                console.error('❌ Database submission failed:', dbResult.reason?.message);
-            } else {
-                console.log('✅ Database: saved successfully');
-            }
-            if (adminEmailResult.status === 'rejected') {
-                console.error('❌ Admin email failed:', adminEmailResult.reason?.text || adminEmailResult.reason?.message || adminEmailResult.reason);
-            } else if (adminEmailResult.value === null) {
-                console.warn('⚠️ Admin email skipped: template not configured');
-            } else {
-                console.log('✅ Admin email: sent to', ADMIN_EMAIL);
-            }
-            if (userEmailResult.status === 'rejected') {
-                console.error('❌ User confirmation failed:', userEmailResult.reason?.text || userEmailResult.reason?.message || userEmailResult.reason);
-            } else if (userEmailResult.value === null) {
-                console.warn('⚠️ User confirmation skipped: template not configured');
-            } else {
-                console.log('✅ User confirmation: sent to', formData.email);
-            }
-
-            // Check if at least DB save succeeded
-            if (dbResult.status === 'fulfilled') {
-                const adminFailed = adminEmailResult.status === 'rejected';
-
-                setStatus('success');
-                if (adminFailed) {
-                    setStatusMessage('Message saved! (Note: Email notification failed — check EmailJS config)');
-                } else {
-                    setStatusMessage('Your message has been received! We\'ll get back to you soon.');
-                }
-            } else if (adminEmailResult.status === 'fulfilled' && adminEmailResult.value !== null) {
-                setStatus('success');
-                setStatusMessage('Message sent! We\'ll get back to you soon.');
-            } else {
-                // Everything failed
-                throw new Error(dbResult.reason?.message || 'Failed to send message');
-            }
+            setStatus('success');
+            setStatusMessage('Your message has been received! We\'ll get back to you soon.');
 
             // Reset form
             setFormData({ name: '', email: '', phone: '', problem: '', message: '' });
@@ -159,6 +66,7 @@ export default function Contact() {
             }, 8000);
 
         } catch (err) {
+            console.error('❌ Submission failed:', err.message);
             setStatus('error');
             setStatusMessage(err.message || 'Something went wrong. Please try again or call us directly.');
             setTimeout(() => {
