@@ -1,8 +1,15 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+/**
+ * Admin Schema
+ * -------------------------------------------------
+ * SECURITY: maxlength on email prevents oversized input at DB level.
+ * Password is hashed with bcrypt (cost factor 12) before save.
+ * -------------------------------------------------
+ */
 const adminSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true, lowercase: true },
+    email: { type: String, required: true, unique: true, lowercase: true, maxlength: 254 },
     password: { type: String, required: true },
 }, {
     timestamps: true,

@@ -1,6 +1,20 @@
+/**
+ * Auth Middleware — JWT token verification
+ * -------------------------------------------------
+ * SECURITY: JWT_SECRET must be set in environment variables.
+ * The server refuses to start without it (see index.js).
+ * No hardcoded fallback is provided.
+ * -------------------------------------------------
+ */
+
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret-in-production';
+// SECURITY: No fallback value. Server startup validates this exists.
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET environment variable is not set.');
+}
 
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
